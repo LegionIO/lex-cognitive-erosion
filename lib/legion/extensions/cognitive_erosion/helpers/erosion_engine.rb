@@ -11,8 +11,8 @@ module Legion
           end
 
           def create_formation(material_type:, domain:, content:, resistance: nil, **)
-            raise ArgumentError, "maximum formations (#{Constants::MAX_FORMATIONS}) reached" if @formations.size >= Constants::MAX_FORMATIONS
-            raise ArgumentError, "invalid material_type: #{material_type}" unless Constants::MATERIAL_TYPES.include?(material_type)
+            return { success: false, error: :max_formations_reached } if @formations.size >= Constants::MAX_FORMATIONS
+            return { success: false, error: :invalid_material_type } unless Constants::MATERIAL_TYPES.include?(material_type)
 
             formation = Formation.new(
               material_type: material_type,
@@ -22,6 +22,8 @@ module Legion
             )
             @formations[formation.formation_id] = formation
             { success: true, formation_id: formation.formation_id, formation: formation.to_h }
+          rescue ArgumentError => e
+            { success: false, error: e.message }
           end
 
           def erode(formation_id:, agent:, force:, **)
@@ -63,41 +65,27 @@ module Legion
           end
 
           def deepest_channels(limit: 5, **)
-            limit = limit.clamp(1, @channels.size > 0 ? @channels.size : 1)
+            limit = limit.clamp(1, @channels.size.positive? ? @channels.size : 1)
             sorted = @channels.values.sort_by { |c| -c.depth }
             sorted.first(limit).map(&:to_h)
           end
 
           def most_eroded(limit: 5, **)
-            limit = limit.clamp(1, @formations.size > 0 ? @formations.size : 1)
-            sorted = @formations.values.sort_by { |f| f.erosion_depth }.reverse
+            limit = limit.clamp(1, @formations.size.positive? ? @formations.size : 1)
+            sorted = @formations.values.sort_by(&:erosion_depth).reverse
             sorted.first(limit).map(&:to_h)
           end
 
           def erosion_report(**)
-            canyons   = @formations.values.count(&:canyon?)
-            weathered = @formations.values.count(&:weathered?)
-            pristine  = @formations.values.count(&:pristine?)
-            avg_depth = if @formations.empty?
-                          0.0
-                        else
-                          (@formations.values.sum(&:erosion_depth) / @formations.size.to_f).round(10)
-                        end
-            avg_integrity = if @formations.empty?
-                               1.0
-                             else
-                               (@formations.values.sum(&:integrity) / @formations.size.to_f).round(10)
-                             end
-
             {
               success:           true,
               total_formations:  @formations.size,
               total_channels:    @channels.size,
-              canyons:           canyons,
-              weathered:         weathered,
-              pristine:          pristine,
-              average_depth:     avg_depth,
-              average_integrity: avg_integrity,
+              canyons:           @formations.values.count(&:canyon?),
+              weathered:         @formations.values.count(&:weathered?),
+              pristine:          @formations.values.count(&:pristine?),
+              average_depth:     average_depth,
+              average_integrity: average_integrity,
               deepest_channels:  deepest_channels(limit: 3),
               most_eroded:       most_eroded(limit: 3)
             }
@@ -119,6 +107,18 @@ module Legion
           end
 
           private
+
+          def average_depth
+            return 0.0 if @formations.empty?
+
+            (@formations.values.sum(&:erosion_depth) / @formations.size.to_f).round(10)
+          end
+
+          def average_integrity
+            return 1.0 if @formations.empty?
+
+            (@formations.values.sum(&:integrity) / @formations.size.to_f).round(10)
+          end
 
           def find_channel(formation_id, agent)
             @channels.values.find { |c| c.formation_id == formation_id && c.agent == agent }

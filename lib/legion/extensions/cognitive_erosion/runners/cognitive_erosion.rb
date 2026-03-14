@@ -27,9 +27,7 @@ module Legion
           def erode(formation_id:, agent:, force:, engine: nil, **)
             eng = engine || default_engine
             result = eng.erode(formation_id: formation_id, agent: agent, force: force)
-            if result[:success]
-              Legion::Logging.debug "[cognitive_erosion] eroded #{formation_id[0..7]} agent=#{agent} force=#{force.round(3)}"
-            end
+            Legion::Logging.debug "[cognitive_erosion] eroded #{formation_id[0..7]} agent=#{agent} force=#{force.round(3)}" if result[:success]
             result
           rescue ArgumentError => e
             Legion::Logging.warn "[cognitive_erosion] erode failed: #{e.message}"
@@ -65,7 +63,8 @@ module Legion
           def erosion_report(engine: nil, **)
             eng = engine || default_engine
             result = eng.erosion_report
-            Legion::Logging.debug "[cognitive_erosion] report: formations=#{result[:total_formations]} channels=#{result[:total_channels]} canyons=#{result[:canyons]}"
+            Legion::Logging.debug "[cognitive_erosion] report: formations=#{result[:total_formations]} " \
+                                  "channels=#{result[:total_channels]} canyons=#{result[:canyons]}"
             result
           rescue ArgumentError => e
             { success: false, error: e.message }

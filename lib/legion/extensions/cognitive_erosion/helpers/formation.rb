@@ -73,20 +73,20 @@ module Legion
 
           def to_h
             {
-              formation_id:   @formation_id,
-              material_type:  @material_type,
-              domain:         @domain,
-              content:        @content,
-              resistance:     @resistance,
-              integrity:      @integrity,
-              erosion_depth:  @erosion_depth,
+              formation_id:    @formation_id,
+              material_type:   @material_type,
+              domain:          @domain,
+              content:         @content,
+              resistance:      @resistance,
+              integrity:       @integrity,
+              erosion_depth:   @erosion_depth,
               integrity_label: integrity_label,
-              depth_label:    depth_label,
-              weathered:      weathered?,
-              canyon:         canyon?,
-              pristine:       pristine?,
-              created_at:     @created_at,
-              updated_at:     @updated_at
+              depth_label:     depth_label,
+              weathered:       weathered?,
+              canyon:          canyon?,
+              pristine:        pristine?,
+              created_at:      @created_at,
+              updated_at:      @updated_at
             }
           end
         end

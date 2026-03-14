@@ -39,7 +39,7 @@ RSpec.describe Legion::Extensions::CognitiveErosion::Helpers::ErosionEngine do
       expect(result[:success]).to be(false)
     end
 
-    it 'raises when MAX_FORMATIONS is reached' do
+    it 'returns error when MAX_FORMATIONS is reached' do
       stub_const('Legion::Extensions::CognitiveErosion::Helpers::Constants::MAX_FORMATIONS', 2)
       engine.create_formation(material_type: :chalk, domain: 'd', content: 'c')
       engine.create_formation(material_type: :clay, domain: 'd2', content: 'c2')
